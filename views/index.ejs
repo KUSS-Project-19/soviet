@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Internet of Soviets</title>
+    <script>
+      var signout = getElementById('signout')
+      signout.onclick = function() {
+        var http = new XMLHttpRequest()
+        http.open('post', '/do_signout')
+        http.send()
+      }
+
+      function deviceAction(dvid) {
+        var http = new XMLHttpRequest()
+        http.open('post', '/do_action')
+        http.send(JSON.stringify({ dvid: dvid }))
+      }
+    </script>
+  </head>
+  <body>
+    <div>
+      Greetings, <%= user %>!
+      <a id='signout'>Sign Out</a>
+    </div>
+    <div>
+      <table>
+        <th>
+          <td>ID</td>
+          <td>Name</td>
+          <td>Status</td>
+          <td>Action</td>
+        </th>
+        <% for (var i = 0; i < devices.length; ++i) { %>
+        <tr>
+          <td><%= devices[i].dvid %></td>
+          <td><%= devices[i].name %></td>
+          <td><%= devices[i].status %></td>
+          <td><input type='submit' value='Do something'
+            onclick='deviceAction(<%= devices[i].dvid %>)'></td>
+        </tr>
+        <% } %>
+      </table>
+    </div>
+  </body>
+</html>
