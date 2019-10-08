@@ -29,13 +29,15 @@
           <td>ID</td>
           <td>Name</td>
           <td>Status</td>
+          <td>Recent Update</td>
           <td>Action</td>
         </th>
         <% for (var i = 0; i < devices.length; ++i) { %>
         <tr>
           <td><%= devices[i].dvid %></td>
-          <td><%= devices[i].name %></td>
-          <td><%= devices[i].status %></td>
+          <td><%= devices[i].dvname %></td>
+          <td><%= devices[i].sensor %></td>
+          <td><%= devices[i].sensorUpdated %></td>
           <td><input type='submit' value='Do something'
             onclick='deviceAction(<%= devices[i].dvid %>)'></td>
         </tr>
