@@ -158,10 +158,25 @@ async function userDeviceList(urid) {
 }
 module.exports.userDeviceList = userDeviceList
 
-async function userDeviceRegister(urid, dvid, dvname) {
+async function userDeviceRegister(urid, dvid, pass) {
     const conn = await connect()
     try {
-        // TODO
+        let [ results ] = await conn.execute(
+            'select passhash from devices where urid is null and dvid = ?',
+            [ dvid ])
+
+        if (results.length === 0) {
+            throw new errors.HttpError(httpStatus.NOT_FOUND)
+        }
+
+        if (!await bcrypt.compare(pass, results[0]['passhash'])) {
+            throw new errors.HttpError(httpStatus.UNAUTHORIZED)
+        }
+
+        conn.execute(
+            'update devices set urid = ? where dvid = ?',
+            [ urid, dvid ])
+
         conn.commit()
     }
     catch (err) {

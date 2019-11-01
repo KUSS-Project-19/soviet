@@ -4,13 +4,6 @@
     <meta charset='utf-8'>
     <title>Internet of Soviets</title>
     <script>
-      var signout = getElementById('signout')
-      signout.onclick = function() {
-        var http = new XMLHttpRequest()
-        http.open('post', '/do_signout')
-        http.send()
-      }
-
       function deviceAction(dvid) {
         var http = new XMLHttpRequest()
         http.open('post', '/do_action')
@@ -20,28 +13,36 @@
   </head>
   <body>
     <div>
-      Greetings, <%= user %>!
-      <a id='signout'>Sign Out</a>
+      Greetings, <%= urname %>!
+      <a href='/signout'>Sign Out</a>
+    </div>
+    <div>
+      <a href='/register'>Register a device</a>
     </div>
     <div>
       <table>
-        <th>
-          <td>ID</td>
-          <td>Name</td>
-          <td>Status</td>
-          <td>Recent Update</td>
-          <td>Action</td>
-        </th>
-        <% for (var i = 0; i < devices.length; ++i) { %>
-        <tr>
-          <td><%= devices[i].dvid %></td>
-          <td><%= devices[i].dvname %></td>
-          <td><%= devices[i].sensor %></td>
-          <td><%= devices[i].sensorUpdated %></td>
-          <td><input type='submit' value='Do something'
-            onclick='deviceAction(<%= devices[i].dvid %>)'></td>
-        </tr>
-        <% } %>
+        <caption>Your Devices</caption>
+        <thead>
+          <tr>
+            <td>ID</td>
+            <td>Name</td>
+            <td>Status</td>
+            <td>Time</td>
+            <td>Action</td>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (var i = 0; i < devices.length; ++i) { %>
+          <tr>
+            <td>#<%= devices[i].dvid %></td>
+            <td>"<%= devices[i].dvname %>"</td>
+            <td>S: <%= devices[i].sensor %></td>
+            <td>T: <%= devices[i].sensorUpdated %></td>
+            <td><input type='submit' value='Do something'
+              onclick='deviceAction(<%= devices[i].dvid %>)'></td>
+          </tr>
+          <% } %>
+        </tbody>
       </table>
     </div>
   </body>

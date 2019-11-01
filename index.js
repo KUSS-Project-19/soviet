@@ -13,13 +13,14 @@ const errors = require('./errors')
 const logger = require('./logger')
 
 function validateSchema(obj, schema) {
-    if (joi.validate(obj, schema).error !== null) {
+    const { error, value } = schema.validate(obj)
+    if (typeof error !== 'undefined') {
         throw new errors.HttpError(httpStatus.BAD_REQUEST)
     }
 }
 
 function validateSession(x) {
-    if (typeof x === undefined) {
+    if (typeof x === 'undefined') {
         throw new errors.HttpError(httpStatus.UNAUTHORIZED)
     }
 }
@@ -81,7 +82,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 app.get('/', asyncHandler(async (req, res) => {
-    if (typeof req.session.urid === undefined) {
+    if (typeof req.session.urid === 'undefined') {
         res.redirect('/signin')
     }
     else {
@@ -89,7 +90,7 @@ app.get('/', asyncHandler(async (req, res) => {
         const dvlist = await db.userDeviceList(req.session.urid)
 
         res.render('index', {
-            user: urinfo.urname,
+            urname: urinfo.urname,
             devices: dvlist
         })
     }
@@ -100,10 +101,10 @@ app.get('/signin', (req, res) => {
 })
 
 app.post('/do_signin', asyncHandler(async (req, res) => {
-    validateSchema(req.body, {
+    validateSchema(req.body, joi.object({
         urname: joi.string().required(),
         pass: joi.string().required()
-    })
+    }))
 
     const urinfo = await db.userLogin(req.body.urname, req.body.pass)
     req.session.urid = urinfo.urid
@@ -111,12 +112,12 @@ app.post('/do_signin', asyncHandler(async (req, res) => {
     let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
     logger.info(`user login from:${ip} urid:${urinfo.urid}`)
 
-    res.send('<script>alert("Sign in"); history.go("/");</script>')
+    res.send('<script>alert("Sign in"); location.href = "/";</script>')
 }))
 
-app.post('/do_signout', (req, res) => {
+app.get('/signout', (req, res) => {
     req.session.destroy()
-    res.send('<script>alert("Sign out"); history.go(-1);</script>')
+    res.send('<script>alert("Sign out"); location.href = "/signin";</script>')
 })
 
 app.get('/signup', (req, res) => {
@@ -124,10 +125,10 @@ app.get('/signup', (req, res) => {
 })
 
 app.post('/do_signup', asyncHandler(async (req, res) => {
-    validateSchema(req.body, {
+    validateSchema(req.body, joi.object({
         urname: joi.string().required(),
         pass: joi.string().required()
-    })
+    }))
 
     const urinfo = await db.userCreate(req.body.urname, req.body.pass)
     req.session.urid = urinfo.urid
@@ -135,7 +136,7 @@ app.post('/do_signup', asyncHandler(async (req, res) => {
     let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
     logger.info(`user creation from:${ip} urid:${urinfo.urid}`)
 
-    res.send('<script>alert("Sign up"); history.go("/");</script>')
+    res.send('<script>alert("Sign up"); location.href = "/";</script>')
 }))
 
 app.get('/register', (req, res) => {
@@ -146,25 +147,26 @@ app.get('/register', (req, res) => {
 
 app.post('/do_register', asyncHandler(async (req, res) => {
     validateSession(req.session.urid)
-    validateSchema(req.body, {
+    validateSchema(req.body, joi.object({
         dvid: joi.number().required().integer().min(0),
-        dvname: joi.string().required()
-    })
+        pass: joi.string().required()
+    }))
 
-    await db.userDeviceRegister(req.session.urid, Number(req.body.dvid), req.body.dvname)
+    await db.userDeviceRegister(req.session.urid, Number(req.body.dvid), req.body.pass)
 
-    res.send('<script>alert("Registered"); history.go("/");</script>')
+    res.send('<script>alert("Registered"); location.href = "/";</script>')
 }))
 
 app.post('/do_action', asyncHandler(async (req, res) => {
     validateSession(req.session.urid)
-    validateSchema(req.body, {
+    validateSchema(req.body, joi.object({
         dvid: joi.number().required().integer().min(0)
-    })
+    }))
 
     const dvid = Number(req.body.dvid)
 
     // check ownership by deviceGetInfo()
+    // if user does not own devices, HttpError throwed.
     await db.deviceGetInfo(dvid, req.session.urid)
 
     deviceEvent(dvid, 'action')

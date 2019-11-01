@@ -1,3 +1,5 @@
+const httpStatus = require('http-status-codes')
+
 class HttpError extends Error {
     constructor(code, msg) {
         msg = msg || httpStatus.getStatusText(code)
