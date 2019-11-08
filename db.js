@@ -188,3 +188,31 @@ async function userDeviceRegister(urid, dvid, pass) {
     }
 }
 module.exports.userDeviceRegister = userDeviceRegister
+
+//
+async function deviceLogin(pass) {
+    let passhash = null
+
+    const conn = await connect()
+    try {
+        passhash = await bcrypt.hash(pass, saltRounds)
+        const [ results ] = await conn.execute(
+            'select dvid, passhash from devices where passhash = ?',
+            [ passhash ])
+
+        if (results.length === 0) {
+            throw new errors.HttpError(httpStatus.UNAUTHORIZED)
+        }
+
+        dvid = results[0]['dvid']
+    }
+    finally {
+        conn.release()
+    }
+
+    return {
+        dvid: dvid
+    }
+}
+module.exports.deviceLogin = deviceLogin
+//

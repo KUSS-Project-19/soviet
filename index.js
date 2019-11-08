@@ -1,4 +1,5 @@
 const PORT = 8080
+const DevicePORT = 3000
 
 const path = require('path')
 const express = require('express')
@@ -7,6 +8,11 @@ const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const joi = require('@hapi/joi')
 const httpStatus = require('http-status-codes')
+
+//
+const deviceapp = require('http').createServer(express)
+const deviceio = require('socket.io')(deviceapp)
+//
 
 const db = require('./db')
 const errors = require('./errors')
@@ -188,6 +194,30 @@ app.use((err, req, res, next) => {
     }
 })
 
+//
+deviceio.on('connection', function(socket) {
+
+    socket.on('login', function(data){
+        console.log('Device logged-in:\n deviceid: ' + data.passwd)
+
+        socket.passwd = data.passwd
+
+        const dvid = db.deviceLogin(socket.passwd)
+
+        console.log('Device logged-in:\n deviceid: ' + dvid)
+
+        socket.emit('dvid', dvid)
+    })
+
+})
+//
+
 app.listen(PORT, () => {
     logger.info(`server listening on :${PORT}`)
 })
+
+//
+deviceapp.listen(DevicePORT, () => {
+    logger.info(`server listening on :${DevicePORT}`)
+})
+//
