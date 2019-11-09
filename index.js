@@ -1,5 +1,6 @@
 const PORT = 8080
 const DevicePORT = 3000
+const timeout = 6000
 
 const path = require('path')
 const express = require('express')
@@ -17,6 +18,10 @@ const deviceio = require('socket.io')(deviceapp)
 const db = require('./db')
 const errors = require('./errors')
 const logger = require('./logger')
+
+//
+var dvidDic = {}
+//
 
 function validateSchema(obj, schema) {
     const { error, value } = schema.validate(obj)
@@ -196,17 +201,53 @@ app.use((err, req, res, next) => {
 
 //
 deviceio.on('connection', function(socket) {
+    socket.dvid = null
 
-    socket.on('login', function(data){
-        console.log('Device logged-in:\n deviceid: ' + data.passwd)
+    socket.on('deviceLog', async function(data) {
+        if (socket.dvid != null) {
+            try {
+                 await db.deviceLog(socket.dvid, data.logData)
+            }
+
+            catch (e) {
+                console.log('log error\n')
+            }
+
+            finally {
+
+            }
+        }
+    })
+
+    socket.on('login', async function(data){
+        console.log('Device logged-in:\n deviceid: ' + data.dvid)
 
         socket.passwd = data.passwd
+        socket.dvid = data.dvid
+        var  isValid = true
 
-        const dvid = db.deviceLogin(socket.passwd)
+        try {
+            await db.deviceLogin(socket.passwd, socket.dvid)
+            await db.deviceOnline(socket.dvid)
 
-        console.log('Device logged-in:\n deviceid: ' + dvid)
+            socket.emit('valid', true)
+        }
 
-        socket.emit('dvid', dvid)
+        catch(e) {
+            console.log('error\n')
+            //socket.dvid = null
+            isValid = false
+        }
+
+        finally {
+            socket.passwd = null
+            socket.emit('valid', isValid)
+        }
+    })
+
+    socket.on('disconnect', function(data) {
+         console.log('Device logout:\n deviceid: ' + socket.dvid)
+        // ~~~
     })
 
 })

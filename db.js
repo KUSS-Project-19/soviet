@@ -190,29 +190,92 @@ async function userDeviceRegister(urid, dvid, pass) {
 module.exports.userDeviceRegister = userDeviceRegister
 
 //
-async function deviceLogin(pass) {
+async function deviceLogin(pass, dvid) {
     let passhash = null
+    let urid = null
 
     const conn = await connect()
     try {
-        passhash = await bcrypt.hash(pass, saltRounds)
         const [ results ] = await conn.execute(
-            'select dvid, passhash from devices where passhash = ?',
-            [ passhash ])
+            'select urid, dvid, passhash from devices where dvid = ?',
+            [ dvid ])
 
         if (results.length === 0) {
+            throw new errors.HttpError(httpStatus.NOT_FOUND)
+        }
+
+        dvid: results[0]['dvid']
+        urid: results[0]['urid']
+        passhash = results[0]['passhash']
+
+        if (!await bcrypt.compare(pass, passhash)) {
             throw new errors.HttpError(httpStatus.UNAUTHORIZED)
         }
 
-        dvid = results[0]['dvid']
+        return {
+            valid: true
+        }
     }
     finally {
         conn.release()
     }
-
-    return {
-        dvid: dvid
-    }
 }
 module.exports.deviceLogin = deviceLogin
+
+async function deviceOnline(dvid) {
+    const startTime = new Date().toLocaleString()
+
+    const conn = await connect()
+    try {
+        const [ results ] = await conn.execute(
+            'insert into onlineDevices ( dvid, startTime ) values ?',
+            [[ dvid, startTime ]])
+
+        await conn.commit()
+
+        return {
+            valid: true
+        }
+    }
+    catch (err) {
+        await conn.rollback()
+        if (err.code === 'ER_DUP_ENTRY') {
+            throw new errors.HttpError(httpStatus.CONFLICT)
+        }
+        throw err
+    }
+    finally {
+        conn.release()
+    }
+}
+module.exports.deviceOnline = deviceOnline
+
+async function deviceLog(dvid, logData) {
+    const startTime = new Date().toLocaleString()
+    console.log(startTime)
+
+    const conn = await connect()
+    try {
+        const [ results ] = await conn.execute(
+            'insert into deviceLog ( dvid, logData, startTime ) values ?',
+            [[ dvid, logData, startTime ]])
+
+        await conn.commit()
+
+        return {
+            valid: true
+        }
+    }
+    catch (err) {
+        await conn.rollback()
+        if (err.code === 'ER_DUP_ENTRY') {
+            throw new errors.HttpError(httpStatus.CONFLICT)
+        }
+        throw err
+    }
+    finally {
+        conn.release()
+    }
+}
+module.exports.deviceLog = deviceLog
 //

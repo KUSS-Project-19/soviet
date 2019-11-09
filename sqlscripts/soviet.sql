@@ -1,8 +1,11 @@
 create database if not exists soviet;
 use soviet;
 
+drop table if exists deviceLog;
+drop table if exists onlineDevices;
 drop table if exists devices;
 drop table if exists users;
+
 
 create table users (
     urid int not null auto_increment,
@@ -22,6 +25,23 @@ create table devices (
     primary key ( dvid ),
     foreign key ( urid )
         references users ( urid )
+        on update cascade on delete set null
+) charset = utf8;
+
+create table onlineDevices (
+    dvid int null,
+    startTime datetime,    
+    foreign key ( dvid )
+        references devices ( dvid )
+        on update cascade on delete set null
+) charset = utf8;
+
+create table deviceLog (
+    dvid int null,
+    logData char(60) null,
+    startTime datetime,    
+    foreign key ( dvid )
+        references devices ( dvid )
         on update cascade on delete set null
 ) charset = utf8;
 
