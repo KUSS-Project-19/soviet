@@ -229,7 +229,7 @@ async function deviceOnline(dvid) {
     try {
         const [ results ] = await conn.execute(
             'insert into onlineDevices ( dvid, startTime ) values ?',
-            [[ dvid, startTime ]])
+            [ dvid, startTime ])
 
         await conn.commit()
 
@@ -258,7 +258,7 @@ async function deviceLog(dvid, logData) {
     try {
         const [ results ] = await conn.execute(
             'insert into deviceLog ( dvid, logData, startTime ) values ?',
-            [[ dvid, logData, startTime ]])
+            [ dvid, logData, startTime ])
 
         await conn.commit()
 
