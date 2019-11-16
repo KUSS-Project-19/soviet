@@ -1,7 +1,6 @@
 {
   "name": "soviet",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,5 +20,15 @@
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KUSS-Project-19/soviet.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/KUSS-Project-19/soviet/issues"
+  },
+  "homepage": "https://github.com/KUSS-Project-19/soviet#readme",
+  "description": "GIT CTF server program"
 }
