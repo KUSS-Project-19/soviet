@@ -14,14 +14,32 @@ async function connect() {
     return conn
 }
 
-async function userCreate(urname, pass) {
+async function userCreate(urname, pass, dvid, dvpw) {
     const passhash = await bcrypt.hash(pass, saltRounds)
 
     const conn = await connect()
     try {
-        const [ results ] = await conn.execute(
+        let [ results ] = await conn.execute(
+            'select passhash from devices where dvid = ? and urid is null',
+            [ dvid ])
+
+        if (results.length === 0) {
+            throw new errors.HttpError(httpStatus.NOT_FOUND)
+        }
+
+        if (!await bcrypt.compare(dvpw, results[0]['passhash'])) {
+            throw new errors.HttpError(httpStatus.NOT_FOUND)
+        }
+
+        [ results ] = await conn.execute(
             'insert into users ( urname, passhash ) values ?',
             [ urname, passhash ])
+
+        const urid = results.insertId
+
+        await conn.execute(
+            'update devices set urid = ? where dvid = ?',
+            [ urid, dvid ])
 
         await conn.commit()
 
@@ -75,6 +93,43 @@ async function userLogin(urname, pass) {
 }
 module.exports.userLogin = userLogin
 
+async function deviceLogin(dvid, pass) {
+    let dvinfo = null
+    let passhash = null
+
+    const conn = await connect()
+    try {
+        const [ results ] = await conn.execute(
+            'select passhash, urid, dvname, isOnline, sensor, sensorUpdated from devices where dvid = ?',
+            [ dvid ])
+
+        if (results.length === 0) {
+            throw new errors.HttpError(httpStatus.UNAUTHORIZED)
+        }
+
+        passhash = results[0]['passhash']
+        dvinfo = {
+            dvid: dvid,
+            urid: results[0]['urid'],
+            dvname: results[0]['dvname'],
+            isOnline: results[0]['isOnline'] !== 0,
+            sensor: results[0]['sensor'],
+            sensorUpdated: results[0]['sensorUpdated']
+        }
+    }
+    finally {
+        conn.release()
+    }
+
+    if (await bcrypt.compare(pass, passhash)) {
+        return dvinfo
+    }
+    else {
+        throw new errors.HttpError(httpStatus.UNAUTHORIZED)
+    }
+}
+module.exports.deviceLogin = deviceLogin
+
 async function userGetInfo(urid) {
     const conn = await connect()
     try {
@@ -104,12 +159,12 @@ async function deviceGetInfo(dvid, urid) {
 
         if (typeof urid === 'undefined') {
             [ results ] = await conn.execute(
-                'select urid, dvname, sensor, sensorUpdated from devices where dvid = ?',
+                'select urid, dvname, isOnline, sensor, sensorUpdated from devices where dvid = ?',
                 [ dvid ])
         }
         else {
             [ results ] = await conn.execute(
-                'select urid, dvname, sensor, senseorUpdated from devices where dvid = ? and urid = ?',
+                'select urid, dvname, isOnline, sensor, sensorUpdated from devices where dvid = ? and urid = ?',
                 [ dvid, urid ])
         }
 
@@ -121,6 +176,7 @@ async function deviceGetInfo(dvid, urid) {
             dvid: dvid,
             urid: results[0]['urid'],
             dvname: results[0]['dvname'],
+            isOnline: results[0]['isOnline'] !== 0,
             sensor: results[0]['sensor'],
             sensorUpdated: results[0]['sensorUpdated']
         }
@@ -131,12 +187,54 @@ async function deviceGetInfo(dvid, urid) {
 }
 module.exports.deviceGetInfo = deviceGetInfo
 
+async function deviceSetOnline(dvid, isOnline) {
+    const conn = await connect()
+    try {
+        await conn.execute(
+            'update devices set isOnline = ? where dvid = ?',
+            [ (isOnline ? 1 : 0), dvid ])
+
+        conn.commit()
+    }
+    catch (err) {
+        conn.rollback()
+        throw err
+    }
+    finally {
+        conn.release()
+    }
+}
+module.exports.deviceSetOnline = deviceSetOnline
+
+async function deviceUpdateSensor(dvid, value) {
+    const conn = await connect()
+    try {
+        let [ results ] = await conn.execute(
+            'update devices set sensor = ?, sensorUpdated = ? where dvid = ?',
+            [ value, new Date(), dvid ])
+
+        if (results.affectedRows === 0) {
+            throw new errors.HttpError(httpStatus.NOT_FOUND)
+        }
+
+        conn.commit()
+    }
+    catch (err) {
+        conn.rollback()
+        throw err
+    }
+    finally {
+        conn.release()
+    }
+}
+module.exports.deviceUpdateSensor = deviceUpdateSensor
+
 async function userDeviceList(urid) {
     const conn = await connect()
     try {
         const [ results ] = await conn.execute(
-            'select dvid, dvname, sensor, sensorUpdated from devices join users on devices.urid = users.urid'
-                + ' where devices.urid = ?',
+            'select dvid, dvname, isOnline, sensor, sensorUpdated'
+                + ' from devices join users on devices.urid = users.urid where devices.urid = ?',
             [ urid ])
 
         let dvlist = []
@@ -145,6 +243,7 @@ async function userDeviceList(urid) {
                 dvid: row['dvid'],
                 urid: urid,
                 dvname: row['dvname'],
+                isOnline: row['isOnline'] !== 0,
                 sensor: row['sensor'],
                 sensorUpdated: row['sensorUpdated']
             })

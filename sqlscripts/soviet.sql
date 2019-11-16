@@ -17,6 +17,7 @@ create table devices (
     urid int null,
     dvname varchar(64) null,
     passhash char(60) not null,
+    isOnline tinyint(1) not null default 0,
     sensor float(53) null,
     sensorUpdated datetime null,
     primary key ( dvid ),

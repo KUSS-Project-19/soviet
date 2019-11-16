@@ -6,9 +6,17 @@
     <script>
       function deviceAction(dvid) {
         var http = new XMLHttpRequest()
+        http.onreadystatechange = function() {
+          location.reload(1)
+        }
         http.open('post', '/do_action')
+        http.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
         http.send(JSON.stringify({ dvid: dvid }))
       }
+
+      setTimeout(function() {
+        location.reload(1)
+      }, 5000)
     </script>
   </head>
   <body>
@@ -26,7 +34,8 @@
           <tr>
             <td>ID</td>
             <td>Name</td>
-            <td>Status</td>
+            <td>Online</td>
+            <td>Sensor</td>
             <td>Time</td>
             <td>Action</td>
           </tr>
@@ -36,8 +45,9 @@
           <tr>
             <td>#<%= devices[i].dvid %></td>
             <td>"<%= devices[i].dvname %>"</td>
-            <td>S: <%= devices[i].sensor %></td>
-            <td>T: <%= devices[i].sensorUpdated %></td>
+            <td><%= devices[i].isOnline ? 'O' : 'X' %></td>
+            <td><%= devices[i].sensor %></td>
+            <td><%= devices[i].sensorUpdated %></td>
             <td><input type='submit' value='Do something'
               onclick='deviceAction(<%= devices[i].dvid %>)'></td>
           </tr>

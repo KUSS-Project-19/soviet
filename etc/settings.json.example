@@ -1,8 +1,15 @@
 {
+  "frontweb": {
+    "port": 8080,
+    "session": {
+      "name": "soviet.revolution.sid",
+      "secret": "mArxLenIN"
+    }
+  },
   "db": {
     "host": "localhost",
     "user": "root",
-    "password": "123456",
+    "password": "pAsSwoRd",
     "database": "soviet"
   }
 }
