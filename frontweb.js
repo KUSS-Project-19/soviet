@@ -21,7 +21,7 @@ function createServer(callback) {
     app.set('view engine', 'ejs')
     app.engine('html', ejs.renderFile)
 
-    const isProxy = false
+    let isProxy = false
     if (settings.frontweb.proxy !== null) {
         isProxy = true
         app.set('trust proxy', settings.frontweb.proxy)

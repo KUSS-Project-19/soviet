@@ -1,7 +1,7 @@
 {
   "frontweb": {
     "port": 8080,
-    "proxy": "1",
+    "proxy": 1,
     "prefix": "",
     "session": {
       "name": "soviet.revolution.sid",
