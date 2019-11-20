@@ -2,6 +2,7 @@ const path = require('path')
 const express = require('express')
 const session = require('express-session')
 const bodyParser = require('body-parser')
+const SQLiteStore = require('connect-sqlite3')(session);
 const ejs = require('ejs')
 const joi = require('@hapi/joi')
 
@@ -20,12 +21,25 @@ function createServer(callback) {
     app.set('view engine', 'ejs')
     app.engine('html', ejs.renderFile)
 
+    const isProxy = false
+    if (settings.frontweb.proxy !== null) {
+        isProxy = true
+        app.set('trust proxy', settings.frontweb.proxy)
+    }
+
+    const sessionStore = new SQLiteStore({
+        table: 'sessions',
+        db: 'sessionsDB',
+        dir: path.join(__dirname, 'etc')
+    })
+
     app.use(session({
         name: settings.frontweb.session.name,
         secret: settings.frontweb.session.name,
         resave: false,
         saveUninitialized: true,
-        cookie: { secure: false, maxAge: 60 * 60 * 1000 }
+        cookie: { secure: isProxy, maxAge: 60 * 60 * 1000 },
+        store: sessionStore
     }))
 
     app.use(bodyParser.urlencoded({ extended: true }))
@@ -40,14 +54,33 @@ function createServer(callback) {
             const dvlist = await db.userDeviceList(req.session.urid)
 
             res.render('index', {
+                prefix: settings.frontweb.prefix,
                 urname: urinfo.urname,
                 devices: dvlist
             })
         }
     }))
 
+    app.get('/logs', util.asyncHandler(async (req, res) => {
+        util.validateSession(req.session.urid)
+        util.validateSchema(req.query, joi.object({
+            dvid: joi.number().required().integer().min(0),
+            dvname: joi.string().required()
+        }))
+
+        const logs = await db.userDeviceLogList(req.session.urid, Number(req.query.dvid))
+
+        res.render('logs', {
+            prefix: settings.frontweb.prefix,
+            dvname: req.query.dvname,
+            logs: logs
+        })
+    }))
+
     app.get('/signin', (req, res) => {
-        res.render('signin')
+        res.render('signin', {
+            prefix: settings.frontweb.prefix
+        })
     })
 
     app.post('/do_signin', util.asyncHandler(async (req, res) => {
@@ -71,7 +104,9 @@ function createServer(callback) {
     })
 
     app.get('/signup', (req, res) => {
-        res.render('signup')
+        res.render('signup', {
+            prefix: settings.frontweb.prefix
+        })
     })
 
     app.post('/do_signup', util.asyncHandler(async (req, res) => {
@@ -95,17 +130,21 @@ function createServer(callback) {
     app.get('/register', (req, res) => {
         util.validateSession(req.session.urid)
 
-        res.render('register')
+        res.render('register', {
+            prefix: settings.frontweb.prefix
+        })
     })
 
     app.post('/do_register', util.asyncHandler(async (req, res) => {
         util.validateSession(req.session.urid)
         util.validateSchema(req.body, joi.object({
             dvid: joi.number().required().integer().min(0),
+            dvname: joi.string().required(),
             pass: joi.string().required()
         }))
 
-        await db.userDeviceRegister(req.session.urid, Number(req.body.dvid), req.body.pass)
+        await db.userDeviceRegister(req.session.urid, Number(req.body.dvid),
+            req.body.dvname, req.body.pass)
 
         res.send('<script>alert("Registered"); location.href = "/";</script>')
     }))

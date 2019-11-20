@@ -6,11 +6,13 @@
   </head>
   <body>
     <div>
-      <form method='post' action='/do_register'>
+      <form method='post' action='<%=prefix%>/do_register'>
         <label for='dvid'>Device ID</label>
         <input type='number' name='dvid'><br>
         <label for='pass'>Device Password</label>
         <input type='password' name='pass'><br>
+        <label for='dvname'>Device Name</label>
+        <input type='text' name='dvname'><br>
         <input type='submit' value='Register'>
       </form>
     </div>

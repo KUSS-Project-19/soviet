@@ -7,6 +7,10 @@ const settings = require('./settings').get()
 
 const saltRounds = 10
 
+function checkNormalString(str) {
+    return /^[a-zA-Z0-9]+$/.test(str)
+}
+
 const pool = mysql.createPool(settings.db)
 async function connect() {
     const conn =  await pool.getConnection()
@@ -15,6 +19,10 @@ async function connect() {
 }
 
 async function userCreate(urname, pass, dvid, dvpw) {
+    if (!checkNormalString(urname)) {
+        throw new errors.HttpError(httpStatus.BAD_REQUEST)
+    }
+
     const passhash = await bcrypt.hash(pass, saltRounds)
 
     const conn = await connect()
@@ -209,13 +217,19 @@ module.exports.deviceSetOnline = deviceSetOnline
 async function deviceUpdateSensor(dvid, value) {
     const conn = await connect()
     try {
+        const nowDate = new Date()
+
         let [ results ] = await conn.execute(
             'update devices set sensor = ?, sensorUpdated = ? where dvid = ?',
-            [ value, new Date(), dvid ])
+            [ value, nowDate, dvid ])
 
         if (results.affectedRows === 0) {
             throw new errors.HttpError(httpStatus.NOT_FOUND)
         }
+
+        await conn.execute(
+            'insert into logtable ( dvid, sensor, sensorUpdated ) values ( ?, ?, ? )',
+            [ dvid, value, nowDate ])
 
         conn.commit()
     }
@@ -257,7 +271,35 @@ async function userDeviceList(urid) {
 }
 module.exports.userDeviceList = userDeviceList
 
-async function userDeviceRegister(urid, dvid, pass) {
+async function userDeviceLogList(urid, dvid) {
+    const conn = await connect()
+    try {
+        let [ results ] = await conn.execute(
+            'select sensor, sensorUpdated from logtable where dvid = ?'
+                + ' order by sensorUpdated desc limit 100',
+            [ dvid ])
+
+        let logs = []
+        for (let row of results) {
+            logs.push({
+                sensor: Number(row['sensor']),
+                sensorUpdated: new Date(row['sensorUpdated'])
+            })
+        }
+
+        return logs
+    }
+    finally {
+        conn.release()
+    }
+}
+module.exports.userDeviceLogList = userDeviceLogList;
+
+async function userDeviceRegister(urid, dvid, dvname, pass) {
+    if (!checkNormalString(dvname)) {
+        throw new errors.HttpError(httpStatus.BAD_REQUEST)
+    }
+
     const conn = await connect()
     try {
         let [ results ] = await conn.execute(
@@ -273,8 +315,8 @@ async function userDeviceRegister(urid, dvid, pass) {
         }
 
         conn.execute(
-            'update devices set urid = ? where dvid = ?',
-            [ urid, dvid ])
+            'update devices set urid = ?, dvname = ? where dvid = ?',
+            [ urid, dvname, dvid ])
 
         conn.commit()
     }

@@ -1,3 +1,6 @@
+// read settings file at first
+require('./settings').get()
+
 const frontweb = require('./frontweb')
 const logger = require('./logger')
 

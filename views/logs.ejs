@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Internet of Soviets</title>
+    <script>
+      function onRefresh() {
+        location.reload(1)
+      }
+
+      setTimeout(function() {
+        location.reload(1)
+      }, 5000)
+    </script>
+  </head>
+  <body>
+    <div>
+      Logs of device "<%= dvname %>"
+    </div>
+    <div>
+    </div>
+      <input type='button' value='새로고침' onclick='onRefresh()'>
+    <div>
+      <table>
+        <caption>Logs</caption>
+        <thead>
+          <tr>
+            <td>Sensor</td>
+            <td>Time</td>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (var i = 0; i < logs.length; ++i) { %>
+          <tr>
+            <td><%= logs[i].sensor %></td>
+            <td><%= logs[i].sensorUpdated %></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

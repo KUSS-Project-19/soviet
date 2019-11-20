@@ -1,6 +1,7 @@
 create database if not exists soviet;
 use soviet;
 
+drop table if exists logtable;
 drop table if exists devices;
 drop table if exists users;
 
@@ -26,7 +27,18 @@ create table devices (
         on update cascade on delete set null
 ) charset = utf8;
 
+create table logtable (
+    logid int not null auto_increment,
+    dvid int not null,
+    sensor float(53) not null,
+    sensorUpdated datetime not null,
+    primary key ( logid ),
+    foreign key ( dvid )
+        references devices ( dvid )
+        on update cascade on delete cascade
+) charset = utf8;
+
 -- 1234 / 1234
 insert into users ( urname, passhash ) values ( "1234", "$2b$10$sqipmMR0DP7eiXL69dm6jOmEo70i9jqEhGZocTeWQrE09bQyiMdg2" );
 -- test
-insert into devices ( passhash ) values ( "$2b$10$sIlCmS7U7RVsekLWrREKf.pAZE4lkDEUAdZ6PXK7eUrt9nBH2QWte" );
+insert into devices ( urid, dvname, passhash ) values ( 1, "test", "$2b$10$sIlCmS7U7RVsekLWrREKf.pAZE4lkDEUAdZ6PXK7eUrt9nBH2QWte" );
