@@ -29,7 +29,7 @@ function createServer(callback) {
 
     const sessionStore = new SQLiteStore({
         table: 'sessions',
-        db: 'sessionsDB',
+        db: 'sessionsDB.db',
         dir: path.join(__dirname, 'etc')
     })
 
