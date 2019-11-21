@@ -52,7 +52,7 @@ async function userCreate(urname, pass, dvid, dvpw) {
         }
 
         [ results ] = await conn.execute(
-            'insert into users ( urname, passhash ) values ?',
+            'insert into users ( urname, passhash ) values ( ?, ? )',
             [ urname, passhash ])
 
         const urid = results.insertId
