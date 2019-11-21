@@ -4,13 +4,22 @@
     <meta charset='utf-8'>
     <title>Internet of Soviets</title>
     <script>
+      function disableAllButton(disabled) {
+        for (var i = 0; i < <%= devices.length %>; ++i) {
+          document.getElementById('act-' + i).disabled = disabled
+          document.getElementById('log-' + i).disabled = disabled
+        }
+      }
+
       function deviceAction(dvid) {
         var http = new XMLHttpRequest()
-        http.onreadystatechange = function() {
-          location.reload(1)
-        }
         http.open('post', '<%=prefix%>/do_action')
         http.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+        http.onreadystatechange = function() {
+          disableAllButton(false)
+          location.reload(1)
+        }
+        disableAllButton(true)
         http.send(JSON.stringify({ dvid: dvid }))
       }
 
@@ -54,9 +63,9 @@
             <td><%= devices[i].isOnline ? 'O' : 'X' %></td>
             <td><%= devices[i].sensor %></td>
             <td><%= devices[i].sensorUpdated %></td>
-            <td><input type='button' value='Do something'
+            <td><input id='act-<%=i%>' type='button' value='Do something'
               onclick='deviceAction(<%= devices[i].dvid %>)'></td>
-            <td><input type='button' value='View Logs'
+            <td><input id='log-<%=i%>' type='button' value='View Logs'
               onclick='deviceLogs(<%= devices[i].dvid %>, "<%= devices[i].dvname %>")'></td>
           </tr>
           <% } %>
