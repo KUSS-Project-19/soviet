@@ -214,22 +214,22 @@ async function deviceSetOnline(dvid, isOnline) {
 }
 module.exports.deviceSetOnline = deviceSetOnline
 
-async function deviceUpdateSensor(dvid, value) {
+async function deviceUpdateSensor(dvid, value, sensorStr) {
     const conn = await connect()
     try {
         const nowDate = new Date()
 
         let [ results ] = await conn.execute(
-            'update devices set sensor = ?, sensorUpdated = ? where dvid = ?',
-            [ value, nowDate, dvid ])
+            'update devices set sensor = ?, sensorStr = ?, sensorUpdated = ? where dvid = ?',
+            [ value, sensorStr, nowDate, dvid ])
 
         if (results.affectedRows === 0) {
             throw new errors.HttpError(httpStatus.NOT_FOUND)
         }
 
         await conn.execute(
-            'insert into logtable ( dvid, sensor, sensorUpdated ) values ( ?, ?, ? )',
-            [ dvid, value, nowDate ])
+            'insert into logtable ( dvid, sensor, sensorStr, sensorUpdated ) values ( ?, ?, ?, ? )',
+            [ dvid, value, sensorStr, nowDate ])
 
         conn.commit()
     }
@@ -275,7 +275,7 @@ async function userDeviceLogList(urid, dvid) {
     const conn = await connect()
     try {
         let [ results ] = await conn.execute(
-            'select sensor, sensorUpdated from logtable where dvid = ?'
+            'select sensor, sensorStr, sensorUpdated from logtable where dvid = ?'
                 + ' order by sensorUpdated desc limit 100',
             [ dvid ])
 
@@ -283,6 +283,7 @@ async function userDeviceLogList(urid, dvid) {
         for (let row of results) {
             logs.push({
                 sensor: Number(row['sensor']),
+                sensorStr: row['sensorStr'],
                 sensorUpdated: new Date(row['sensorUpdated'])
             })
         }

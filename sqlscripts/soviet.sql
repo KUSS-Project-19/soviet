@@ -20,6 +20,7 @@ create table devices (
     passhash char(60) not null,
     isOnline tinyint(1) not null default 0,
     sensor float(53) null,
+    sensorStr varchar(70) null,
     sensorUpdated datetime null,
     primary key ( dvid ),
     foreign key ( urid )
@@ -31,6 +32,7 @@ create table logtable (
     logid int not null auto_increment,
     dvid int not null,
     sensor float(53) not null,
+    sensorStr varchar(70) null,
     sensorUpdated datetime not null,
     primary key ( logid ),
     foreign key ( dvid )

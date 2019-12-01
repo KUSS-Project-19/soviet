@@ -182,12 +182,13 @@ function createServer(callback) {
     app.post('/device/sensor', util.asyncHandler(async (req, res) => {
         util.validateSession(req.session.dvid)
         util.validateSchema(req.body, joi.object({
-            value: joi.number().required()
+            value: joi.number().required(),
+            sensorStr: joi.string().required()
         }))
 
         const value = Number(req.body.value)
 
-        await db.deviceUpdateSensor(req.session.dvid, value)
+        await db.deviceUpdateSensor(req.session.dvid, value, req.body.sensorStr)
         res.json({ })
     }))
 
