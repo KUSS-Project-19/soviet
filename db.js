@@ -167,12 +167,12 @@ async function deviceGetInfo(dvid, urid) {
 
         if (typeof urid === 'undefined') {
             [ results ] = await conn.execute(
-                'select urid, dvname, isOnline, sensor, sensorUpdated from devices where dvid = ?',
+                'select urid, dvname, isOnline, sensor, sensorStr, sensorUpdated from devices where dvid = ?',
                 [ dvid ])
         }
         else {
             [ results ] = await conn.execute(
-                'select urid, dvname, isOnline, sensor, sensorUpdated from devices where dvid = ? and urid = ?',
+                'select urid, dvname, isOnline, sensor, sensorStr, sensorUpdated from devices where dvid = ? and urid = ?',
                 [ dvid, urid ])
         }
 
@@ -186,6 +186,7 @@ async function deviceGetInfo(dvid, urid) {
             dvname: results[0]['dvname'],
             isOnline: results[0]['isOnline'] !== 0,
             sensor: results[0]['sensor'],
+            sensorStr: results[0]['sensorStr'],
             sensorUpdated: results[0]['sensorUpdated']
         }
     }
