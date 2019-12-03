@@ -6,6 +6,11 @@ const SQLiteStore = require('connect-sqlite3')(session);
 const ejs = require('ejs')
 const joi = require('@hapi/joi')
 
+const crypto = require('crypto')
+const fs = require('fs')
+const hash = crypto.createHash('md5')
+const fileDir = path.join(__dirname, 'file')
+
 const db = require('./db')
 const errors = require('./errors')
 const logger = require('./logger')
@@ -190,6 +195,38 @@ function createServer(callback) {
 
         await db.deviceUpdateSensor(req.session.dvid, value, req.body.sensorStr)
         res.json({ })
+    }))
+
+    app.post('/device/version', util.asyncHandler(async (req, res) => {
+        util.validateSession(req.session.dvid)
+        util.validateSchema(req.body, joi.object({
+            fileHash: joi.string().required()
+        }))
+
+        const fileHash = req.body.fileHash
+
+        const files = fs.readdirSync(fileDir)
+        const input = fs.createReadStream(files[0])
+        hash.update(files[0])
+
+        input.on('readable', function(){
+            var data = input.read()
+            if(data) {
+                hash.update(data)
+            }
+
+            else {
+            console.log(`${hash.digest('hex')} ${files[0]}`)
+            }
+        })
+
+        var needUpdate = false
+
+        if (fileHash != hash) {
+            needUpdate = true
+        }
+
+        res.json(needUpdate)
     }))
 
     app.get('/device/event', util.asyncHandler(async (req, res) => {
