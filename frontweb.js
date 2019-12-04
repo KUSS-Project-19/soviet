@@ -240,6 +240,23 @@ function createServer(callback) {
         deviceEvent.addListener(req.session.dvid, req, res)
     }))
 
+    app.get('/device/update', util.asyncHandler(async (req, res) => {
+        util.validateSession(req.session.dvid)
+
+        fs.readFile(fileLoc, "binary", function(error, file) {
+            if(error) {
+                res.writeHead(500, {"Content-Type": "text/plain"});
+                res.write(error + "\n");
+                res.end();
+            } else {
+                res.writeHead(200, {"Content-Type": "text/plain"});
+                res.write(file, "binary");
+                res.end();
+            }
+        });
+
+    }))
+
     app.use((err, req, res, next) => {
         if (res.headersSent) {
             return next(err)
