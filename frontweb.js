@@ -214,17 +214,18 @@ function createServer(callback) {
             }
 
             else {
-            console.log(`${hash.digest('hex')} ${fileLoc}`)
+                console.log(`${hash.digest('hex')} ${fileLoc}`)
+
+                var needUpdate = false
+
+                if (fileHash != hash) {
+                    needUpdate = true
+                }
+
+                res.json(needUpdate)
             }
         })
 
-        var needUpdate = false
-
-        if (fileHash != hash) {
-            needUpdate = true
-        }
-
-        res.json(needUpdate)
     }))
 
     app.get('/device/event', util.asyncHandler(async (req, res) => {
