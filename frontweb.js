@@ -8,8 +8,7 @@ const joi = require('@hapi/joi')
 
 const crypto = require('crypto')
 const fs = require('fs')
-const hash = crypto.createHash('md5')
-const fileDir = path.join(__dirname, 'file')
+const fileLoc = path.join(__dirname, 'file/file.txt')
 
 const db = require('./db')
 const errors = require('./errors')
@@ -202,12 +201,11 @@ function createServer(callback) {
         util.validateSchema(req.body, joi.object({
             fileHash: joi.string().required()
         }))
+        
+        const hash = crypto.createHash('md5')
 
         const fileHash = req.body.fileHash
-
-        const files = fs.readdirSync(fileDir)
-        const input = fs.createReadStream(files[0])
-        hash.update(files[0])
+        const input = fs.createReadStream(fileLoc)
 
         input.on('readable', function(){
             var data = input.read()
@@ -216,7 +214,7 @@ function createServer(callback) {
             }
 
             else {
-            console.log(`${hash.digest('hex')} ${files[0]}`)
+            console.log(`${hash.digest('hex')} ${fileLoc}`)
             }
         })
 
