@@ -1,4 +1,3 @@
-디바이스는 서버에 센서값을 전달하고 action 명령을 받음
+Software Security GIT CTF Toy Model Server Program
 
-로그인한 유저는 자신이 등록한 디바이스의 online 여부, 최신 센서값 및 업데이트 시간을 볼 수 있고
-버튼을 눌러 action 명령을 전달할 수 있음.
+documents: [https://github.com/KUSS-Project-19/README](https://github.com/KUSS-Project-19/README)

@@ -18,6 +18,18 @@ async function connect() {
     return conn
 }
 
+async function initializeOnStart() {
+    const conn = await connect()
+    try {
+        await conn.execute('update devices set isOnline = 0 where 1 = 1')
+        await conn.commit()
+    }
+    finally {
+        conn.release()
+    }
+}
+module.exports.initializeOnStart = initializeOnStart
+
 async function userCreate(urname, pass, dvid, dvpw) {
     if (!checkNormalString(urname)) {
         throw new errors.HttpError(httpStatus.BAD_REQUEST)
@@ -40,7 +52,7 @@ async function userCreate(urname, pass, dvid, dvpw) {
         }
 
         [ results ] = await conn.execute(
-            'insert into users ( urname, passhash ) values ?',
+            'insert into users ( urname, passhash ) values ( ?, ? )',
             [ urname, passhash ])
 
         const urid = results.insertId
@@ -203,10 +215,10 @@ async function deviceSetOnline(dvid, isOnline) {
             'update devices set isOnline = ? where dvid = ?',
             [ (isOnline ? 1 : 0), dvid ])
 
-        conn.commit()
+        await conn.commit()
     }
     catch (err) {
-        conn.rollback()
+        await conn.rollback()
         throw err
     }
     finally {
@@ -232,10 +244,10 @@ async function deviceUpdateSensor(dvid, value, sensorStr) {
             'insert into logtable ( dvid, sensor, sensorStr, sensorUpdated ) values ( ?, ?, ?, ? )',
             [ dvid, value, sensorStr, nowDate ])
 
-        conn.commit()
+        await conn.commit()
     }
     catch (err) {
-        conn.rollback()
+        await conn.rollback()
         throw err
     }
     finally {
@@ -316,14 +328,14 @@ async function userDeviceRegister(urid, dvid, dvname, pass) {
             throw new errors.HttpError(httpStatus.UNAUTHORIZED)
         }
 
-        conn.execute(
+        await conn.execute(
             'update devices set urid = ?, dvname = ? where dvid = ?',
             [ urid, dvname, dvid ])
 
-        conn.commit()
+        await conn.commit()
     }
     catch (err) {
-        conn.rollback()
+        await conn.rollback()
         throw err
     }
     finally {

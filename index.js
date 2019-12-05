@@ -2,8 +2,13 @@
 require('./settings').get()
 
 const frontweb = require('./frontweb')
+const db = require('./db')
+
 const logger = require('./logger')
 
-frontweb.createServer(port => {
-    logger.info(`listening on :${port}`)
+db.initializeOnStart().then(() => {
+    frontweb.createServer(port => {
+        logger.info(`listening on :${port}`)
+    })
 })
+
