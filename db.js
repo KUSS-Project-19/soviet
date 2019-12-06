@@ -11,6 +11,10 @@ function checkNormalString(str) {
     return /^[a-zA-Z0-9]+$/.test(str)
 }
 
+function checkSensorString(str) {
+    return /^[a-zA-Z0-9\[\]\s]+$/.test(str)
+}
+
 const pool = mysql.createPool(settings.db)
 async function connect() {
     const conn =  await pool.getConnection()
@@ -228,6 +232,10 @@ async function deviceSetOnline(dvid, isOnline) {
 module.exports.deviceSetOnline = deviceSetOnline
 
 async function deviceUpdateSensor(dvid, value, sensorStr) {
+    if (!checkSensorString(sensorStr)) {
+        throw new errors.HttpError(httpStatus.BAD_REQUEST)  //white list
+    }
+
     const conn = await connect()
     try {
         const nowDate = new Date()
