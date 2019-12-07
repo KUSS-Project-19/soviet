@@ -169,6 +169,55 @@ function createServer(callback) {
         res.end()
     }))
 
+    app.use((err, req, res, next) => {
+        if (res.headersSent) {
+            return next(err)
+        }
+
+        if (err instanceof errors.HttpError) {
+            res.status(err.httpCode).json({ code: err.code })
+            if (err.code >= 500) {
+                logger.error(`frontweb: internal error: ${err.name} (code: ${err.code}): ${err.message}`)
+            }
+        }
+        else {
+            next(err)
+        }
+    })
+
+    app.listen(settings.frontweb.port, () => {
+        callback(settings.frontweb.port)
+    })
+}
+module.exports.createServer = createServer
+
+function createDeviceServer(callback) {
+    const app = express()
+
+    let isProxy = false
+    if (settings.frontweb.proxy !== null) {
+        isProxy = true
+        app.set('trust proxy', settings.frontweb.proxy)
+    }
+
+    const sessionStore = new SQLiteStore({
+        table: 'sessions',
+        db: 'sessionsDB.db',
+        dir: path.join(__dirname, 'etc')
+    })
+
+    app.use(session({
+        name: settings.frontweb.session.name,
+        secret: settings.frontweb.session.name,
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: isProxy, maxAge: 60 * 60 * 1000 },
+        store: sessionStore
+    }))
+
+    app.use(bodyParser.urlencoded({ extended: true }))
+    app.use(bodyParser.json())
+
     app.post('/device/login', util.asyncHandler(async (req, res) => {
         util.validateSchema(req.body, joi.object({
             dvid: joi.number().required().integer().min(0),
@@ -274,8 +323,8 @@ function createServer(callback) {
         }
     })
 
-    app.listen(settings.frontweb.port, () => {
-        callback(settings.frontweb.port)
+    app.listen(settings.frontweb.devicePort, () => {
+        callback(settings.frontweb.devicePort)
     })
 }
-module.exports.createServer = createServer
+module.exports.createDeviceServer = createDeviceServer

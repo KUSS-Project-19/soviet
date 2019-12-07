@@ -1,6 +1,7 @@
 {
   "frontweb": {
     "port": 8080,
+    "devicePort": 8070,
     "proxy": 1,
     "prefix": "",
     "session": {

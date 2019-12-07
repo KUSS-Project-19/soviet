@@ -17,6 +17,7 @@ module.exports.get = function() {
         const schema = joi.object({
             frontweb: joi.object({
                 port: joi.number().required().strict().integer().min(1),
+                devicePort: joi.number().required().strict().integer().min(1),
                 proxy: joi.alternatives(
                     joi.number().strict().integer().min(0),
                     joi.string()).required().allow(null),
