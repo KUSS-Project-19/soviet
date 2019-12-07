@@ -1,7 +1,7 @@
 {
   "frontweb": {
     "port": 8080,
-    "port2": 8081,
+    "port_d": 8081,
     "proxy": 1,
     "prefix": "",
     "session": {

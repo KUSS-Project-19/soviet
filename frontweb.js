@@ -326,8 +326,8 @@ function createDeviceServer(callback) {
         }
     })
 
-    app.listen(settings.frontweb.port2, () => {
-        callback(settings.frontweb.port2)
+    app.listen(settings.frontweb.port_d, () => {
+        callback(settings.frontweb.port_d)
     })
 }
 

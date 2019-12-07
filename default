@@ -53,6 +53,6 @@ server {
             proxy_read_timeout 86400;
             keepalive_timeout 86400;
 
-            proxy_pass http://localhost:8080;       # reverse proxy for nodejs program
+            proxy_pass http://localhost:8081;       # reverse proxy for nodejs program
     }
 }

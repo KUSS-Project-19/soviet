@@ -10,8 +10,8 @@ db.initializeOnStart().then(() => {
     frontweb.createFrontServer(port => {
         logger.info(`listening on :${port}`)
     })
-    frontweb.createDeviceServer(port2 => {
-        logger.info(`listening on :${port2}`)
+    frontweb.createDeviceServer(port_d=> {
+        logger.info(`listening on :${port_d}`)
     })
 })
 
