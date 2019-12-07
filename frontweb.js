@@ -214,7 +214,7 @@ function createDeviceServer(callback) {
         secret: settings.frontweb.session.name,
         resave: false,
         saveUninitialized: true,
-        cookie: { secure: isProxy, maxAge: 60 * 60 * 1000 },
+        cookie: { secure: false, maxAge: 60 * 60 * 1000 },
         store: sessionStore
     }))
 
@@ -233,6 +233,7 @@ function createDeviceServer(callback) {
 
         req.session.dvid = dvid
         res.json(dvinfo)
+        res.send('<script>alert("Device Sign in"); location.href = "/";</script>')
     }))
 
     app.post('/device/sensor', util.asyncHandler(async (req, res) => {
@@ -291,6 +292,8 @@ function createDeviceServer(callback) {
         res.write('data: open\n\n')
 
         deviceEvent.addListener(req.session.dvid, req, res)
+
+        res.send('<script>alert("Device Event"); location.href = "/";</script>')
     }))
 
     app.get('/device/update', util.asyncHandler(async (req, res) => {
