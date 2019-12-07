@@ -202,7 +202,7 @@ function createDeviceServer(callback) {
 
     const sessionStore = new SQLiteStore({
         table: 'sessions',
-        db: 'sessionsDB.db',
+        db: 'deviceSessionsDB.db',
         dir: path.join(__dirname, 'etc')
     })
 
