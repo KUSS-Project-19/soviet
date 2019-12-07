@@ -1,8 +1,12 @@
 const path = require('path')
 const express = require('express')
 const session = require('express-session')
+const deviceSession = require('express-session')
 const bodyParser = require('body-parser')
+
 const SQLiteStore = require('connect-sqlite3')(session);
+const devSQLiteStore = require('connect-sqlite3')(deviceSession);
+
 const ejs = require('ejs')
 const joi = require('@hapi/joi')
 
@@ -200,7 +204,7 @@ function createDeviceServer(callback) {
         app.set('trust proxy', settings.frontweb.proxy)
     }
 
-    const sessionStore = new SQLiteStore({
+    const sessionStore = new devSQLiteStore({
         table: 'sessions',
         db: 'deviceSessionsDB.db',
         dir: path.join(__dirname, 'etc')
