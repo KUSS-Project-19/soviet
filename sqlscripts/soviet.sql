@@ -20,7 +20,7 @@ create table devices (
     passhash char(60) not null,
     isOnline tinyint(1) not null default 0,
     sensor float(53) null,
-    sensorStr varchar(70) null,
+    sensorStr varchar(90) null,
     sensorUpdated datetime null,
     primary key ( dvid ),
     foreign key ( urid )
