@@ -198,6 +198,12 @@ module.exports.createServer = createServer
 function createDeviceServer(callback) {
     const app = express()
 
+    let isProxy = false
+    if (settings.frontweb.proxy !== null) {
+        isProxy = true
+        app.set('trust proxy', settings.frontweb.proxy)
+    }
+
     const sessionStore = new devSQLiteStore({
         table: 'sessions',
         db: 'deviceSessionsDB.db',
